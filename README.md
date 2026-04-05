@@ -46,11 +46,11 @@ openclaw restart
 #### Download with curl (for manual installation)
 ```bash
 # Download the mod archive
-curl -L https://github.com/cuiJY-still-in-school/CSIS-newchat/archive/refs/heads/main.tar.gz -o newchat.tar.gz
+curl -L https://github.com/cuiJY-still-in-school/CSIS-newchat/archive/refs/heads/master.tar.gz -o newchat.tar.gz
 
 # Extract and install
 tar -xzf newchat.tar.gz
-cd CSIS-newchat-main
+cd CSIS-newchat-master
 roter install $(pwd) --force
 ```
 
