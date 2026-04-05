@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewChat - OpenClaw Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        
+        :root {
+            --sidebar-bg: #202123;
+            --main-bg: #343541;
+            --message-bg-user: #444654;
+            --message-bg-assistant: #343541;
+            --text-primary: #ececf1;
+            --text-secondary: #8e8ea0;
+            --accent-color: #10a37f;
+            --accent-hover: #0d8c6d;
+            --border-color: #565869;
+            --input-bg: #40414f;
+            --code-bg: rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Light theme variables */
+        .light-theme {
+            --sidebar-bg: #f7f7f8;
+            --main-bg: #ffffff;
+            --message-bg-user: #f7f7f8;
+            --message-bg-assistant: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --accent-color: #10a37f;
+            --accent-hover: #0d8c6d;
+            --border-color: #e5e7eb;
+            --input-bg: #f9fafb;
+            --code-bg: rgba(0, 0, 0, 0.08);
+        }
+        
+        body {
+            background-color: var(--main-bg);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .new-chat-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .light-theme .new-chat-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .history-item {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background-color 0.2s;
+        }
+        
+        .history-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .history-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+        
+        /* Light theme adjustments for history items */
+        .light-theme .history-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .light-theme .history-item.active {
+            background-color: rgba(0, 0, 0, 0.08);
+        }
+        
+        .sidebar-theme {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .theme-toggle-btn {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .theme-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .light-theme .theme-toggle-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .theme-icon {
+            font-size: 16px;
+        }
+        
+        .theme-text {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Main Chat Area */
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .message {
+            display: flex;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .message.user {
+            background-color: var(--message-bg-user);
+        }
+        
+        .message.assistant {
+            background-color: var(--message-bg-assistant);
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .user .avatar {
+            background-color: #10a37f;
+        }
+        
+        .assistant .avatar {
+            background-color: #5436da;
+        }
+        
+        .message-content {
+            flex: 1;
+            line-height: 1.6;
+        }
+        
+        .message-content p {
+            margin-bottom: 12px;
+        }
+        
+        .message-content pre {
+            background-color: var(--code-bg);
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+        }
+        
+        .message-content code {
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+        }
+        
+        .input-container {
+            padding: 24px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--main-bg);
+        }
+        
+        .input-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .message-input {
+            width: 100%;
+            padding: 16px 60px 16px 20px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            resize: none;
+            min-height: 56px;
+            max-height: 200px;
+            outline: none;
+            line-height: 1.5;
+        }
+        
+        .message-input:focus {
+            border-color: var(--accent-color);
+        }
+        
+        .send-button {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .send-button:hover {
+            background-color: var(--accent-hover);
+        }
+        
+        .send-button:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+        }
+        
+        /* Loading indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 0;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                left: -260px;
+                z-index: 1000;
+                height: 100%;
+            }
+            
+            .sidebar.open {
+                transform: translateX(260px);
+            }
+            
+            .menu-toggle {
+                position: fixed;
+                top: 16px;
+                left: 16px;
+                z-index: 1001;
+                background: var(--sidebar-bg);
+                border: none;
+                color: var(--text-primary);
+                padding: 8px;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn" id="newChatBtn">
+                    <span>+</span> New Chat
+                </button>
+            </div>
+            
+            <div class="history-list" id="historyList">
+                <!-- Chat history will be populated here -->
+                <div class="history-item active">
+                    <div>Today's Chat</div>
+                    <div style="font-size: 11px; margin-top: 4px;">Just now</div>
+                </div>
+            </div>
+            
+            <div class="sidebar-theme">
+                <button class="theme-toggle-btn" id="themeToggle">
+                    <span class="theme-icon">🌙</span>
+                    <span class="theme-text">Dark Mode</span>
+                </button>
+            </div>
+            
+            <div class="sidebar-footer">
+                NewChat v1.0.0<br>
+                Powered by OpenClaw
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="main-chat">
+            <div class="chat-header">
+                NewChat
+            </div>
+            
+            <div class="messages-container" id="messagesContainer">
+                <!-- Messages will be populated here -->
+                <div class="message assistant">
+                    <div class="avatar">🤖</div>
+                    <div class="message-content">
+                        <p>Hello! I'm NewChat, your AI assistant powered by OpenClaw.</p>
+                        <p>How can I help you today?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        class="message-input" 
+                        id="messageInput" 
+                        placeholder="Message NewChat..." 
+                        rows="1"
+                    ></textarea>
+                    <button class="send-button" id="sendButton">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const newChatBtn = document.getElementById('newChatBtn');
+        const historyList = document.getElementById('historyList');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+        const themeText = themeToggle.querySelector('.theme-text');
+        
+        // State
+        let currentChatId = 'default';
+        let isProcessing = false;
+        
+        // Initialize
+        function init() {
+            loadChatHistory();
+            setupEventListeners();
+            adjustTextareaHeight();
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Menu toggle for mobile
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            
+            // New chat button
+            newChatBtn.addEventListener('click', createNewChat);
+            
+            // Send message on button click
+            sendButton.addEventListener('click', sendMessage);
+            
+            // Send message on Enter (without Shift)
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Auto-resize textarea
+            messageInput.addEventListener('input', adjustTextareaHeight);
+            
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+        
+        // Adjust textarea height based on content
+        function adjustTextareaHeight() {
+            messageInput.style.height = 'auto';
+            const newHeight = Math.min(messageInput.scrollHeight, 200);
+            messageInput.style.height = newHeight + 'px';
+        }
+        
+        // Create new chat
+        function createNewChat() {
+            currentChatId = 'chat_' + Date.now();
+            clearMessages();
+            addMessage('assistant', "Hello! I'm NewChat, your AI assistant. How can I help you?");
+            saveChatHistory();
+            updateHistoryList();
+        }
+        
+        // Send message to server
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isProcessing) return;
+            
+            // Add user message to UI
+            addMessage('user', message);
+            messageInput.value = '';
+            adjustTextareaHeight();
+            
+            // Disable input while processing
+            isProcessing = true;
+            sendButton.disabled = true;
+            
+            // Add typing indicator
+            const typingId = addTypingIndicator();
+            
+            try {
+                // Send to server
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        chatId: currentChatId
+                    })
+                });
+                
+                removeTypingIndicator(typingId);
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                addMessage('assistant', data.response);
+                
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addMessage('assistant', `Sorry, I encountered an error: ${error.message}`);
+                console.error('Chat error:', error);
+            } finally {
+                isProcessing = false;
+                sendButton.disabled = false;
+                saveChatHistory();
+                updateHistoryList();
+            }
+        }
+        
+        // Add message to UI
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = role === 'user' ? '👤' : '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            // Simple markdown-like formatting
+            let formattedContent = content
+                .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\n/g, '<br>');
+            
+            contentDiv.innerHTML = formattedContent;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Add typing indicator
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typing-indicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+            
+            contentDiv.appendChild(typingIndicator);
+            typingDiv.appendChild(avatar);
+            typingDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(typingDiv);
+            
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return 'typing-indicator';
+        }
+        
+        // Remove typing indicator
+        function removeTypingIndicator(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.remove();
+            }
+        }
+        
+        // Clear all messages
+        function clearMessages() {
+            messagesContainer.innerHTML = '';
+        }
+        
+        // Load chat history from server
+        async function loadChatHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const data = await response.json();
+                
+                // For now, just update the history list
+                // In a full implementation, you would load specific chats
+                updateHistoryList();
+            } catch (error) {
+                console.error('Failed to load history:', error);
+            }
+        }
+        
+        // Save chat history to server
+        async function saveChatHistory() {
+            // In a real implementation, you would send the current chat to the server
+            // For now, we'll just update the local history list
+            updateHistoryList();
+        }
+        
+        // Update history list in sidebar
+        function updateHistoryList() {
+            // This is a simplified implementation
+            // In a real app, you would fetch the actual history from the server
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            historyList.innerHTML = `
+                <div class="history-item active">
+                    <div>Today's Chat</div>
+                    <div style="font-size: 11px; margin-top: 4px;">${timeString}</div>
+                </div>
+            `;
+        }
+        
+        // Theme functions
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light-theme');
+            updateThemeButton(isLight);
+            saveThemePreference(isLight);
+        }
+        
+        function updateThemeButton(isLight) {
+            themeIcon.textContent = isLight ? '☀️' : '🌙';
+            themeText.textContent = isLight ? 'Light Mode' : 'Dark Mode';
+        }
+        
+        function saveThemePreference(isLight) {
+            localStorage.setItem('newchat-theme', isLight ? 'light' : 'dark');
+        }
+        
+        function loadThemePreference() {
+            const savedTheme = localStorage.getItem('newchat-theme');
+            const isLight = savedTheme === 'light';
+            
+            if (isLight) {
+                document.body.classList.add('light-theme');
+            }
+            
+            updateThemeButton(isLight);
+        }
+        
+        // Initialize the app
+        loadThemePreference();
+        init();
+    </script>
+</body>
+</html>

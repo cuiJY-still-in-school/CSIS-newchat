@@ -1,0 +1,19 @@
+{
+  "name": "newchat",
+  "version": "1.0.0",
+  "description": "A chat interface mod for OpenClaw with dashboard integration",
+  "author": "CSIS",
+  "openclaw": {
+    "version": ">=2026.4.0",
+    "api": "1.0"
+  },
+  "entry": "index.js",
+  "permissions": [
+    "gateway:read",
+    "config:read",
+    "config:write"
+  ],
+  "dependencies": {
+    "dashboard": "^1.0.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "port": {
+      "type": "number",
+      "default": 3001,
+      "minimum": 1024,
+      "maximum": 65535,
+      "description": "Port for the NewChat web server"
+    }
+  },
+  "required": []
+}
