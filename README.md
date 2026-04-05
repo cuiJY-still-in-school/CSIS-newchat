@@ -22,14 +22,39 @@ A simple, beautiful chat interface mod for OpenClaw with dashboard integration. 
 ### Dashboard Integration
 ![Dashboard](https://via.placeholder.com/800x450/343541/ECEFF1?text=CSIS+Dashboard+Integration)
 
-## Installation
+## Quick Start
 
-### From GitHub
+### Prerequisites
+- OpenClaw installed and running
+- CSIS Dashboard mod enabled
+- roter mod manager available
+
+### Recommended Installation (via roter)
 ```bash
+# Install NewChat mod directly from GitHub
 roter install github:cuiJY-still-in-school/CSIS-newchat --force
+
+# Enable the mod
+roter enable newchat
+
+# Restart OpenClaw if needed
+openclaw restart
 ```
 
-### From Source (Development)
+### Alternative Installation Methods
+
+#### Download with curl (for manual installation)
+```bash
+# Download the mod archive
+curl -L https://github.com/cuiJY-still-in-school/CSIS-newchat/archive/refs/heads/main.tar.gz -o newchat.tar.gz
+
+# Extract and install
+tar -xzf newchat.tar.gz
+cd CSIS-newchat-main
+roter install ./ --force
+```
+
+#### Development Installation (from source)
 ```bash
 # Clone the repository
 git clone git@github.com:cuiJY-still-in-school/CSIS-newchat.git
@@ -112,7 +137,7 @@ newchat/
 └── .gitignore           # Git ignore rules
 ```
 
-## Development
+## Extending NewChat
 
 ### Adding Features
 
@@ -146,46 +171,3 @@ MIT License
 For issues and feature requests, please open an issue on GitHub:
 https://github.com/cuiJY-still-in-school/CSIS-newchat/issues
 
-## Development
-
-### Project Structure
-```
-newchat/
-├── index.js              # Main mod entry point
-├── manifest.json         # Mod metadata
-├── config/
-│   └── schema.json      # Configuration schema
-├── README.md            # This file
-└── package.json         # Dependencies (if needed)
-```
-
-### Adding New Features
-
-1. **New AI Model Integration**:
-   - Add model to `config/schema.json` enum
-   - Implement API client in `index.js`
-   - Update dashboard configuration panel
-
-2. **UI Enhancements**:
-   - Modify `renderChatInterface()` method
-   - Add new dashboard components
-   - Implement event handlers
-
-3. **Extended Features**:
-   - File upload support
-   - Voice interaction
-   - Multi-user chat rooms
-   - Plugin system for custom commands
-
-## Dependencies
-
-- **dashboard** (^1.0.0): Required for GUI interface
-- **OpenClaw** (>=2026.4.0): Required runtime
-
-## License
-
-MIT
-
-## Support
-
-For issues and feature requests, please open an issue on GitHub.
