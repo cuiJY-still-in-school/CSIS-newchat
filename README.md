@@ -51,7 +51,7 @@ curl -L https://github.com/cuiJY-still-in-school/CSIS-newchat/archive/refs/heads
 # Extract and install
 tar -xzf newchat.tar.gz
 cd CSIS-newchat-main
-roter install ./ --force
+roter install $(pwd) --force
 ```
 
 #### Development Installation (from source)
@@ -61,7 +61,7 @@ git clone git@github.com:cuiJY-still-in-school/CSIS-newchat.git
 cd CSIS-newchat
 
 # Install via roter
-roter install ./ --force
+roter install $(pwd) --force
 ```
 
 ## Configuration
