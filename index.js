@@ -33,11 +33,36 @@ module.exports = {
     this.context = context;
     
     logger.info('NewChat mod loading... 🗨️');
+    logger.info('NewChat onLoad called with context keys: ' + JSON.stringify(Object.keys(context)));
+    logger.info('Context has modPath: ' + ('modPath' in context));
+    logger.info('Context has modDir: ' + ('modDir' in context));
+    if ('modPath' in context) logger.info('modPath: ' + context.modPath);
+    if ('modDir' in context) logger.info('modDir: ' + context.modDir);
     
     try {
       // Load dashboard library
-      this.dashboard = require('dashboard');
+      const dashboardModule = require('dashboard');
       logger.info('Dashboard library loaded successfully');
+      logger.info('Dashboard module keys: ' + JSON.stringify(Object.keys(dashboardModule)));
+      
+      // Dashboard API might be under the 'dashboard' property
+      if (dashboardModule.dashboard) {
+        this.dashboard = dashboardModule.dashboard;
+        logger.info('Using dashboard.dashboard API');
+      } else {
+        this.dashboard = dashboardModule;
+        logger.info('Using dashboard module directly');
+      }
+      
+      logger.info('Dashboard API keys: ' + JSON.stringify(Object.keys(this.dashboard)));
+      if (this.dashboard.components) {
+        logger.info('Dashboard.components type: ' + typeof this.dashboard.components);
+        logger.info('Dashboard.components keys: ' + JSON.stringify(Object.keys(this.dashboard.components)));
+        logger.info('Has Input method: ' + ('Input' in this.dashboard.components));
+      } else {
+        logger.warn('Dashboard.components is undefined');
+      }
+      logger.info('Has registerComponent: ' + ('registerComponent' in this.dashboard));
       
       // Create data directory for chat history
       await this.ensureDataDirectory();
@@ -69,12 +94,30 @@ module.exports = {
    * Ensure data directory exists
    */
   async ensureDataDirectory() {
-    const dataDir = path.join(this.context.modPath, 'data');
     try {
+      // Try to get modPath from context, fall back to current directory
+      let modPath = '.';
+      if (this.context && this.context.modPath) {
+        modPath = this.context.modPath;
+      } else if (this.context && this.context.modDir) {
+        modPath = this.context.modDir;
+      } else {
+        // Try to use the directory containing this file
+        modPath = path.dirname(__filename || '.');
+      }
+      
+      this.logger.info(`Using modPath: ${modPath}`);
+      
+      const dataDir = path.resolve(modPath, 'data');
+      this.logger.info(`Creating data directory: ${dataDir}`);
+      
       await fs.mkdir(dataDir, { recursive: true });
       this.dataDir = dataDir;
+      this.logger.info(`Data directory created: ${dataDir}`);
     } catch (error) {
       this.logger.warn(`Could not create data directory: ${error.message}`);
+      // Continue without data directory
+      this.dataDir = null;
     }
   },
   
@@ -377,22 +420,18 @@ module.exports = {
       icon: '🗨️',
       
       // Configuration panel - only port configuration
-      configure: {
-        components: [
-          components.Input({
-            label: 'Server Port',
-            value: config.port || 3001,
-            type: 'number',
-            placeholder: 'Port for NewChat server (default: 3001)',
-            onChange: (value) => this.updateConfig({ port: parseInt(value) || 3001 })
-          })
-        ]
-      },
+      configureComponents: [
+        components.Input({
+          label: 'Server Port',
+          value: config.port || 3001,
+          type: 'number',
+          placeholder: 'Port for NewChat server (default: 3001)',
+          onChange: (value) => this.updateConfig({ port: parseInt(value) || 3001 })
+        })
+      ],
       
       // Main panel - Launch interface
-      main: {
-        render: (panel) => this.renderLaunchInterface(panel)
-      },
+      mainRender: (panel) => this.renderLaunchInterface(panel),
       
       // Layout
       x: 0,
