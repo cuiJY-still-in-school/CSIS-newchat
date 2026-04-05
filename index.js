@@ -329,20 +329,85 @@ module.exports = {
   },
   
   /**
-   * Get AI response (simplified - echo for now)
+   * Get AI response from OpenClaw gateway HTTP API
    */
   async getAIResponse(message, history) {
-    // TODO: Implement actual AI integration
-    // For now, just echo with some variation
-    
-    const responses = [
-      `I received your message: "${message}". This is a simulated response.`,
-      `You said: "${message}". In a real implementation, this would come from an AI model.`,
-      `Thanks for your message! I'm NewChat, and I'm still under development.`,
-      `Message received: "${message}". To enable real AI responses, configure your API key in the dashboard.`
-    ];
-    
-    return responses[Math.floor(Math.random() * responses.length)];
+    try {
+      // OpenClaw gateway configuration
+      const GATEWAY_URL = 'http://localhost:18789';
+      const GATEWAY_TOKEN = 'cuiJY20130111'; // From openclaw.json
+      const MODEL = 'openclaw/default';
+      
+      this.logger.info(`Sending to OpenClaw gateway: "${message.substring(0, 50)}..."`);
+      
+      // Prepare messages array for OpenAI-compatible API
+      const messages = [];
+      
+      // Add recent history (limit to last 10 exchanges to avoid token limits)
+      const maxHistory = 20; // 10 user + 10 assistant messages max
+      const recentHistory = history.slice(-maxHistory);
+      
+      // Convert history to OpenAI format (strip timestamp field)
+      for (const msg of recentHistory) {
+        messages.push({
+          role: msg.role,
+          content: msg.content
+        });
+      }
+      
+      // Add the new user message
+      messages.push({
+        role: 'user',
+        content: message
+      });
+      
+      // Make HTTP request to OpenClaw gateway
+      const response = await fetch(`${GATEWAY_URL}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GATEWAY_TOKEN}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 2000,
+          stream: false
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.choices || data.choices.length === 0) {
+        throw new Error('No response choices in OpenClaw API response');
+      }
+      
+      const aiResponse = data.choices[0].message.content;
+      this.logger.info(`OpenClaw response: "${aiResponse.substring(0, 50)}..."`);
+      
+      return aiResponse;
+      
+    } catch (error) {
+      this.logger.error(`OpenClaw API error: ${error.message}`);
+      this.logger.warn('Falling back to simulated response');
+      
+      // Fallback to simulated responses
+      const responses = [
+        `I received your message: "${message}". This is a simulated response because OpenClaw API failed.`,
+        `You said: "${message}". OpenClaw API error: ${error.message}`,
+        `Thanks for your message! I'm NewChat. OpenClaw integration failed, using simulated response.`,
+        `Message received: "${message}". OpenClaw error: ${error.message.substring(0, 100)}`
+      ];
+      
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
   },
   
   /**
